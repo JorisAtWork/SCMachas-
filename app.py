@@ -6,7 +6,7 @@ st.set_page_config(page_title="Shrimp Inventory Game", layout="wide")
 st.title("🦐 Shrimp Inventory Management Game")
 
 # --- PERSISTENT STATE MANAGEMENT ---
-if "current_day_index" not in st.state:
+if "current_day_index" not in st.session_state:
     st.session_state.current_day_index = 0
     st.session_state.days = ["Lunes 1", "Martes 1", "Miercoles 1", "Jueves 1", "Viernes 1", "Sabado 1", "Domingo 1", "Lunes 2", "Martes 2", "Miercoles 2", "Jueves 2"]
     
