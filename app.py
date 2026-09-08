@@ -115,7 +115,7 @@ if st.button(f"📥 Submit Orders for {selected_team}"):
             total_available = starting_inv + fresh_order + frozen_order
             actual_sales = min(total_available, demand)
             
-            if actual_sales &lt;= (starting_inv + fresh_order):
+            if actual_sales < (starting_inv + fresh_order):
                 leftover_frozen = frozen_order
                 unsold_fresh = (starting_inv + fresh_order) - actual_sales
             else:
