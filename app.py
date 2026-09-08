@@ -5,6 +5,31 @@ import pandas as pd
 st.set_page_config(page_title="Shrimp Inventory Game", layout="wide")
 st.title("🦐 Shrimp Inventory Management Game")
 
+# --- INSTANTIE VAN TEAMS CONFIGUREREN ---
+st.subheader("👥 Team Configuratie")
+
+# 1. Vraag om het aantal teams
+num_teams = st.number_input("Aantal deelnemende teams:", min_value=1, max_value=10, value=2, step=1)
+
+# 2. Maak invoervelden voor de teamnamen op basis van het gekozen aantal
+team_names = []
+cols = st.columns(int(num_teams)) # Verdeel de invoervelden netjes over kolommen
+
+for i in range(int(num_teams)):
+    with cols[i]:
+        # Genereer een standaardnaam zoals "Team 1" als placeholder
+        default_name = f"Team {i+1}"
+        name = st.text_input(f"Naam voor {default_name}:", value=default_name, key=f"team_name_{i}")
+        team_names.append(name)
+
+# Sla de teamnamen op in session_state zodat je ze elders in de game kunt gebruiken
+if "team_names" not in st.session_state:
+    st.session_state.team_names = team_names
+else:
+    st.session_state.team_names = team_names
+
+st.divider() # Een nette visuele scheidingslijn waaronder het spel begint
+
 # --- PERSISTENT STATE MANAGEMENT ---
 if "current_day_index" not in st.session_state:
     st.session_state.current_day_index = 0
