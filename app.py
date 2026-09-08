@@ -159,7 +159,7 @@ else:
 # --- ADMIN GAME ADVANCEMENT ---
 st.sidebar.markdown("---")
 if st.sidebar.button("⏭️ Advance to Next Day"):
-    if st.session_state.current_day_index &lt; len(st.session_state.days) - 1:
+    if st.session_state.current_day_index < len(st.session_state.days) - 1:
         st.session_state.current_day_index += 1
         st.session_state.round_locked = False
         st.rerun()
