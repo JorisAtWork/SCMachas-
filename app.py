@@ -5,47 +5,53 @@ import pandas as pd
 st.set_page_config(page_title="Shrimp Inventory Game", layout="wide")
 st.title("🦐 Shrimp Inventory Management Game")
 
-# --- INSTANTIE VAN TEAMS CONFIGUREREN ---
-st.subheader("👥 Team Configuratie")
+# ==============================================================================
+# 1. DYNAMISCHE TEAM CONFIGURATIE (GEÏNTEGREERD)
+# ==============================================================================
+if "game_started" not in st.session_state:
+    st.session_state.game_started = False
 
-# 1. Vraag om het aantal teams
-num_teams = st.number_input("Aantal deelnemende teams:", min_value=1, max_value=10, value=2, step=1)
+if not st.session_state.game_started:
+    st.subheader("👥 Team Configuratie")
+    
+    # Vraag om het aantal teams
+    num_teams = st.number_input("Aantal deelnemende teams:", min_value=1, max_value=10, value=3, step=1)
+    
+    # Maak invoervelden voor de teamnamen
+    team_names = []
+    cols = st.columns(int(num_teams))
+    for i in range(int(num_teams)):
+        with cols[i]:
+            default_name = f"Team {i+1}"
+            name = st.text_input(f"Naam voor {default_name}:", value=default_name, key=f"setup_team_{i}")
+            team_names.append(name)
+            
+    if st.button("🚀 Start het Spel met deze Teams"):
+        st.session_state.team_names = team_names
+        st.session_state.game_started = True
+        st.rerun()
+        
+    st.stop() # Stopt het script hier totdat de teams zijn vergrendeld
 
-# 2. Maak invoervelden voor de teamnamen op basis van het gekozen aantal
-team_names = []
-cols = st.columns(int(num_teams)) # Verdeel de invoervelden netjes over kolommen
-
-for i in range(int(num_teams)):
-    with cols[i]:
-        # Genereer een standaardnaam zoals "Team 1" als placeholder
-        default_name = f"Team {i+1}"
-        name = st.text_input(f"Naam voor {default_name}:", value=default_name, key=f"team_name_{i}")
-        team_names.append(name)
-
-# Sla de teamnamen op in session_state zodat je ze elders in de game kunt gebruiken
-if "team_names" not in st.session_state:
-    st.session_state.team_names = team_names
-else:
-    st.session_state.team_names = team_names
-
-st.divider() # Een nette visuele scheidingslijn waaronder het spel begint
-
-# --- PERSISTENT STATE MANAGEMENT ---
+# ==============================================================================
+# 2. PERSISTENT STATE MANAGEMENT (DYNAMISCH GEÏNITIALISEERD)
+# ==============================================================================
 if "current_day_index" not in st.session_state:
     st.session_state.current_day_index = 0
     st.session_state.days = ["Lunes 1", "Martes 1", "Miercoles 1", "Jueves 1", "Viernes 1", "Sabado 1", "Domingo 1", "Lunes 2", "Martes 2", "Miercoles 2", "Jueves 2"]
     
+    # Teams worden nu dynamisch aangemaakt op basis van jouw invoer!
     st.session_state.teams = {
-        "Team Alfa": {"inventory": 0, "history": []},
-        "Team Beta": {"inventory": 0, "history": []},
-        "Team Gamma": {"inventory": 0, "history": []}
+        team: {"inventory": 0, "history": []} for team in st.session_state.team_names
     }
     st.session_state.daily_demand = {}
     st.session_state.round_locked = False
 
 current_day = st.session_state.days[st.session_state.current_day_index]
 
-# --- 👑 ADMIN PANEL &amp; PARAMETERS ---
+# ==============================================================================
+# 3. 👑 ADMIN PANEL & PARAMETERS
+# ==============================================================================
 st.sidebar.header("👑 Admin Control Panel")
 st.sidebar.subheader(f"Current Phase: {current_day}")
 
@@ -54,7 +60,7 @@ with st.sidebar.expander("⚙️ Configure Game Parameters", expanded=True):
     demand_mean = st.number_input("Demand Mean (μ)", min_value=1, value=800, step=10)
     demand_std = st.number_input("Demand Std Dev (σ)", min_value=0, value=100, step=5)
     
-    st.markdown("### 💰 Costs &amp; Pricing")
+    st.markdown("### 💰 Costs & Pricing")
     cost_fresh = st.number_input("Cost per Fresh Shrimp", min_value=0.0, value=3.50, step=0.10, format="%.2f")
     cost_frozen = st.number_input("Cost per Frozen Shrimp", min_value=0.0, value=0.50, step=0.05, format="%.2f")
     cost_holding = st.number_input("Holding Cost (Frozen Rollover)", min_value=0.0, value=1.00, step=0.10, format="%.2f")
@@ -73,7 +79,9 @@ if current_day in st.session_state.daily_demand:
     st.sidebar.metric(label=f"Today's Demand ({current_day})", value=st.session_state.daily_demand[current_day])
 
 
-# --- 🏆 LIVE LEADERBOARD ---
+# ==============================================================================
+# 4. 🏆 LIVE LEADERBOARD (DYNAMISCH)
+# ==============================================================================
 st.header("🏆 Live Standing Leaderboard")
 
 leaderboard_data = []
@@ -112,7 +120,9 @@ else:
 st.markdown("---")
 
 
-# --- 👥 TEAM INTERFACE ---
+# ==============================================================================
+# 5. 👥 TEAM INTERFACE (DYNAMISCH)
+# ==============================================================================
 st.header("👥 Team Dashboard")
 selected_team = st.selectbox("Select Your Team to Order:", list(st.session_state.teams.keys()))
 
@@ -140,7 +150,8 @@ if st.button(f"📥 Submit Orders for {selected_team}"):
             total_available = starting_inv + fresh_order + frozen_order
             actual_sales = min(total_available, demand)
             
-            if actual_sales < (starting_inv + fresh_order):
+            # Syntax gecorrigeerd van &lt; naar <=
+            if actual_sales <= (starting_inv + fresh_order):
                 leftover_frozen = frozen_order
                 unsold_fresh = (starting_inv + fresh_order) - actual_sales
             else:
@@ -173,7 +184,7 @@ if st.button(f"📥 Submit Orders for {selected_team}"):
             st.success(f"Order processed successfully for {selected_team}!")
             st.rerun()  # Rerun to instantly refresh leaderboard metrics above
 
-# --- DISPLAY SCORES &amp; LEDGER ---
+# --- DISPLAY SCORES & LEDGER ---
 st.subheader(f"📊 Personal Ledger History: {selected_team}")
 if team_data['history']:
     df_history = pd.DataFrame(team_data['history'])
@@ -188,7 +199,3 @@ if st.sidebar.button("⏭️ Advance to Next Day"):
         st.session_state.current_day_index += 1
         st.session_state.round_locked = False
         st.rerun()
-    else:
-        st.sidebar.error("Game Over! Final round reached.")
-
-
